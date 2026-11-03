@@ -1,1 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#172337">
+<title>Employee Attendance Manager</title>
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--ink:#182230;--muted:#667085;--line:#e6eaf0;--nav:#172337;--accent:#3659d9;--green:#168653;--red:#c83d4d;--amber:#b7791f;--shadow:0 8px 28px rgba(20,35,60,.06)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+header{background:var(--nav);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.brand{font-size:18px;font-weight:750;letter-spacing:.2px}.sub{color:#b9c5d6;font-size:12px;margin-top:3px}
+header .right{font-size:12px;color:#d6deea;text-align:right}
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 66px)}
+nav{background:#fff;border-right:1px solid var(--line);padding:18px 12px}
+nav button{display:flex;width:100%;border:0;background:transparent;padding:12px 13px;border-radius:9px;text-align:left;color:#4b586b;font-weight:600;cursor:pointer;margin:3px 0}
+nav button.active,nav button:hover{background:#edf1ff;color:var(--accent)}
+main{padding:25px;max-width:1500px;width:100%;margin:auto}
+.page{display:none}.page.active{display:block}
+h1{font-size:24px;margin:0 0 5px}.lead{color:var(--muted);margin:0 0 22px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:17px;box-shadow:var(--shadow)}
+.k-label{color:var(--muted);font-size:12px;font-weight:650}.k-value{font-size:27px;font-weight:760;margin-top:6px}.k-note{font-size:11px;color:var(--muted);margin-top:3px}
+.panel{margin-bottom:17px}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px;flex-wrap:wrap}
+h2{font-size:16px;margin:0}h3{font-size:14px;margin:0 0 10px}
+.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+input,select,textarea{font:inherit;padding:9px 10px;border:1px solid #d8dee8;border-radius:8px;background:#fff;color:var(--ink);min-width:0}
+input[type=number]{width:120px}input[type=time]{width:125px}
+button{font:inherit;cursor:pointer}.btn{border:1px solid #d8deea;background:#fff;color:#344054;padding:9px 12px;border-radius:8px;font-weight:650}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.danger{color:var(--red);border-color:#f1cbd0}.btn.small{padding:6px 9px;font-size:12px}
+table{width:100%;border-collapse:collapse;min-width:620px}th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#778397;background:#fafbfc}td{font-size:13px}tr:last-child td{border-bottom:0}.table-wrap{overflow:auto}
+.pill{display:inline-block;padding:4px 8px;border-radius:30px;font-size:11px;font-weight:700;background:#eef1f5;color:#526071}.Present,.Approved{background:#e6f6ee;color:#13764a}.Absent,.Rejected{background:#fdebed;color:#b52e3d}.Late{background:#fff3dc;color:#986515}.Leave{background:#eeeaff;color:#6045b4}.Half\ Day{background:#e8f1ff;color:#285bb4}.Holiday{background:#edf0f4;color:#687386}.Pending{background:#fff3dc;color:#986515}
+.empty{color:var(--muted);padding:22px;text-align:center}
+.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:12px;color:var(--muted);font-weight:650}
+.notice{background:#f0f4ff;border:1px solid #dce5ff;color:#344c91;padding:11px 13px;border-radius:9px;font-size:12px;margin-bottom:14px}
+.inline{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
 
+/* ---- interface refresh ---- */
+body{-webkit-tap-highlight-color:transparent;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+nav button{align-items:center;gap:12px}
+nav button svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.t-short{display:none}
+.cards .card:nth-child(2) .k-value{color:var(--green)}.cards .card:nth-child(3) .k-value{color:var(--red)}.cards .card:nth-child(4) .k-value{color:var(--amber)}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+input:disabled,select:disabled{background:#f3f5f8;color:#98a2b3}
+.btn:active{background:#eef1f6}.btn.primary:active{background:#2c4bbd}
+@media(max-width:850px){
+:root{--navh:62px}
+header{position:sticky;top:0;z-index:30;padding:12px 16px}
+.layout{grid-template-columns:1fr;min-height:0}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(6,1fr);padding:0 0 env(safe-area-inset-bottom);background:#fff;border:0;border-top:1px solid var(--line);box-shadow:0 -4px 18px rgba(20,35,60,.07)}
+nav button,nav button:hover{flex-direction:column;justify-content:center;gap:3px;height:var(--navh);margin:0;padding:6px 2px;border-radius:0;background:transparent;color:#667085;font-size:10.5px;text-align:center;position:relative;min-width:0}
+nav button.active{color:var(--accent)}
+nav button.active::before{content:"";position:absolute;top:0;left:22%;right:22%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+nav button svg{width:22px;height:22px}
+.t-full{display:none}.t-short{display:inline}
+main{padding:16px 16px calc(var(--navh) + 28px + env(safe-area-inset-bottom))}
+.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+.brand{font-size:17px}.sub{display:none}
+header .right{display:block;font-size:10px;line-height:1.35;white-space:nowrap;color:#aebbd0}
+h1{font-size:21px}.lead{font-size:13px;margin-bottom:14px}
+.form-grid{grid-template-columns:1fr}
+input,select,textarea{font-size:16px;min-height:44px}
+.field input,.field select{width:100%}
+.btn{min-height:44px;padding:10px 14px}.btn.small{min-height:38px;padding:8px 12px;font-size:13px}
+.cards{gap:10px}.card{padding:13px 14px}.k-value{font-size:24px}.k-note{display:none}
+.panel{padding:14px}
+.panel-head .controls{flex:1 1 100%}.panel-head .controls input{flex:1}
+.actions .btn{flex:1 1 140px;text-align:center}
+.inline{flex-wrap:nowrap}.inline input{flex:1}
+.panel:has(.table-wrap){background:none;border:0;box-shadow:none;padding:0}
+.table-wrap{overflow:visible}
+table{min-width:0}table,thead,tbody,tr,td{display:block}thead{display:none}
+td{padding:0;border:0;font-size:13px}td:empty{display:none}td b{font-size:15px}
+td::before{color:var(--muted);font-size:11px;font-weight:650}
+tbody tr{display:grid;gap:8px 12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+/* dashboard */
+#dashTable tr{grid-template-columns:1fr auto}
+#dashTable td:nth-child(2),#dashTable td:nth-child(4){justify-self:end}
+#dashTable td:nth-child(3){color:var(--muted)}#dashTable td:nth-child(3)::before{content:"Arrival  "}
+#dashTable td:nth-child(4){font-size:0}
+#dashMonthly tr{grid-template-columns:repeat(5,1fr);gap:10px 4px}
+#dashMonthly td:first-child{grid-column:1/-1}
+#dashMonthly td:not(:first-child){font-size:18px;font-weight:700;line-height:1.1}
+#dashMonthly td:not(:first-child)::before{display:block;margin-bottom:3px;font-size:10.5px;font-weight:600}
+#dashMonthly td:nth-child(2)::before{content:"Present"}#dashMonthly td:nth-child(3)::before{content:"Absent"}#dashMonthly td:nth-child(4)::before{content:"Half days"}#dashMonthly td:nth-child(5)::before{content:"Paid leave"}#dashMonthly td:nth-child(6)::before{content:"Late"}
+/* attendance */
+#attTable tr{grid-template-columns:1fr 1fr;grid-template-areas:"n l" "s t" "o o"}
+#attTable td:nth-child(1){grid-area:n}#attTable td:nth-child(2){grid-area:s}#attTable td:nth-child(3){grid-area:t}#attTable td:nth-child(4){grid-area:l;justify-self:end;font-size:0}#attTable td:nth-child(5){grid-area:o}
+#attTable td:nth-child(2)::before,#attTable td:nth-child(3)::before,#attTable td:nth-child(5)::before{display:block;margin-bottom:4px}
+#attTable td:nth-child(2)::before{content:"Status"}#attTable td:nth-child(3)::before{content:"Time in"}#attTable td:nth-child(5)::before{content:"Note"}
+#attTable td input,#attTable td select{width:100%}
+#attendance{padding-bottom:76px}
+#attendance .panel-head>.controls:last-child{position:fixed;left:0;right:0;bottom:calc(var(--navh) + env(safe-area-inset-bottom));z-index:40;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px;background:rgba(255,255,255,.96);border-top:1px solid var(--line);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+/* employees */
+#empTable tr{grid-template-columns:1fr auto;grid-template-areas:"n s" "m m" "a a"}
+#empTable td:nth-child(1){grid-area:n}#empTable td:nth-child(2){grid-area:m;color:var(--muted)}#empTable td:nth-child(2)::before{content:"Monthly salary  "}#empTable td:nth-child(3){grid-area:s;color:var(--muted);font-size:12px}#empTable td.actions{grid-area:a;gap:8px}
+/* leave */
+#leaveTable tr{grid-template-columns:1fr auto;grid-template-areas:"e s" "d t" "r r" "x x"}
+#leaveTable td:nth-child(1){grid-area:e;font-weight:650;font-size:15px}#leaveTable td:nth-child(2){grid-area:d}#leaveTable td:nth-child(3){grid-area:t;color:var(--muted);font-weight:650}#leaveTable td:nth-child(4){grid-area:s}#leaveTable td:nth-child(5){grid-area:r;color:#475467}#leaveTable td:nth-child(6){grid-area:x;justify-self:end}
+/* payroll */
+#payrollTable tr{grid-template-columns:repeat(4,1fr);grid-template-areas:"n n e e" "b b b b" "w p a l";gap:10px 4px}
+#payrollTable td:nth-child(1){grid-area:n}#payrollTable td:nth-child(7){grid-area:e;text-align:right;font-size:17px;font-weight:800;color:var(--accent)}#payrollTable td:nth-child(7) b{font-size:inherit}
+#payrollTable td:nth-child(2){grid-area:b;display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+#payrollTable td:nth-child(3){grid-area:w}#payrollTable td:nth-child(4){grid-area:p}#payrollTable td:nth-child(5){grid-area:a}#payrollTable td:nth-child(6){grid-area:l}
+#payrollTable td:nth-child(n+3):nth-child(-n+6){font-size:17px;font-weight:700}
+#payrollTable td:nth-child(7)::before,#payrollTable td:nth-child(n+3):nth-child(-n+6)::before{display:block;margin-bottom:2px;font-size:10.5px;font-weight:600}
+#payrollTable td:nth-child(2)::before{content:"Basic salary"}#payrollTable td:nth-child(3)::before{content:"Working days"}#payrollTable td:nth-child(4)::before{content:"Payable days"}#payrollTable td:nth-child(5)::before{content:"Absent"}#payrollTable td:nth-child(6)::before{content:"Late"}#payrollTable td:nth-child(7)::before{content:"Estimated salary"}
+/* history */
+#historyTable tr{grid-template-columns:auto 1fr auto;grid-template-areas:"d w s" "t t l" "n n n"}
+#historyTable td:nth-child(1){grid-area:d;font-weight:650}#historyTable td:nth-child(2){grid-area:w;color:var(--muted)}#historyTable td:nth-child(3){grid-area:s}#historyTable td:nth-child(4){grid-area:t}#historyTable td:nth-child(4)::before{content:"Time in  "}#historyTable td:nth-child(5){grid-area:l}#historyTable td:nth-child(5)::before{content:"Late  "}#historyTable td:nth-child(6){grid-area:n;color:var(--muted)}
+}
+
+[hidden]{display:none!important}
+#gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--nav)}
+body:not(.locked) #gate{display:none}
+.gate-card{width:100%;max-width:380px;background:#fff;border-radius:16px;padding:26px 22px;display:flex;flex-direction:column;gap:14px}
+.gate-card .brand{color:var(--nav);font-size:22px}.gate-card .lead{margin:0}
+body.locked .layout,body.emp-mode .layout{display:none}
+#empHome{display:none}body.emp-mode #empHome{display:block}body.emp-mode header .right{display:none}
+.emp-body{max-width:520px;margin:0 auto;padding:18px 16px calc(24px + env(safe-area-inset-bottom))}
+.eh-status{font-size:24px;font-weight:760;margin:8px 0 16px}
+#ehBtn{width:100%;min-height:56px;font-size:17px}#ehBtn:disabled{opacity:.55;cursor:default}
+#lvForm{grid-template-columns:1fr 1fr}#lvForm .wide{grid-column:1/-1}@media(max-width:640px){#lvForm{grid-template-columns:1fr}}.eh-row small{color:var(--muted)}
+.eh-row{display:flex;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}.eh-row:last-child{border:0}
+@media print{header,nav,.no-print,.btn,.controls{display:none!important}.layout{display:block}main{padding:0;max-width:none}.page{display:none!important}.page.active{display:block!important}.panel,.card{box-shadow:none;break-inside:avoid}body{background:#fff}}
+</style></head>
+<body class="locked">
+<div id="gate"><form id="gateForm" class="gate-card"><div class="brand">◈ StaffTrack</div><p class="lead">Sign in with your work email.</p>
+<div class="field"><label for="gEmail">Email</label><input id="gEmail" type="email" autocomplete="username" autocapitalize="none" required></div>
+<div class="field"><label for="gPass">Password</label><input id="gPass" type="password" autocomplete="current-password" required></div>
+<div class="field" id="gKeyRow" hidden><label for="gKey">Project key (publishable)</label><input id="gKey" autocomplete="off" autocapitalize="none" placeholder="Paste once"></div>
+<button class="btn primary" type="submit" id="gBtn">Sign in</button><p class="lead" id="gMsg" style="color:var(--red)"></p></form></div>
+<header><div><div class="brand">◈ StaffTrack</div><div class="sub">Employee Attendance & Payroll Manager</div></div><div class="right" id="syncStatus">LOCAL OFFICE SYSTEM<br>Records saved on this device</div></header>
+<section id="empHome"><div class="emp-body"><h1 id="ehName"></h1>
+<div class="panel"><div class="k-label" id="ehDate"></div><div class="eh-status" id="ehStatus"></div><button class="btn primary" id="ehBtn">Check in now</button><p class="lead" id="ehMsg" style="margin:10px 0 0"></p></div>
+<div class="panel"><h2>Apply for leave</h2><form id="lvForm" class="form-grid" style="margin-top:12px">
+<div class="field"><label for="lvFrom">From date</label><input id="lvFrom" type="date" required></div>
+<div class="field"><label for="lvTo">To date</label><input id="lvTo" type="date" required></div>
+<div class="field"><label for="lvType">Leave type</label><select id="lvType"><option>Paid</option><option>Unpaid</option><option>Sick</option><option>Casual</option></select></div>
+<div class="field"><label for="lvReason">Reason</label><input id="lvReason" placeholder="Optional" maxlength="300"></div>
+<div class="field wide"><button class="btn primary" type="submit" id="lvBtn">Send leave request</button></div></form>
+<p class="lead" id="lvMsg" style="margin:10px 0 0"></p></div>
+<div class="panel"><h2 style="margin-bottom:6px">My leave requests</h2><div id="lvList"></div></div>
+<div class="panel"><h2 style="margin-bottom:6px">Recent days</h2><div id="ehList"></div></div>
+<div class="actions"><button class="btn" onclick="changePw()">Change password</button><button class="btn" onclick="signOut()">Sign out</button></div></div></section>
+<div class="layout">
+<nav class="no-print">
+<button class="active" data-page="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg><span class="t-full">Dashboard</span><span class="t-short">Dashboard</span></button>
+<button data-page="attendance"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><span class="t-full">Attendance</span><span class="t-short">Attendance</span></button>
+<button data-page="employees"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="9" r="2.4"/><path d="M16.5 14.3c2.7.3 4.5 2.2 4.5 5"/></svg><span class="t-full">Employees</span><span class="t-short">Employees</span></button>
+<button data-page="leaves"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="t-full">Leave management</span><span class="t-short">Leave</span></button>
+<button data-page="reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-6M12 20V5M19 20V10"/></svg><span class="t-full">Reports &amp; payroll</span><span class="t-short">Reports</span></button>
+<button data-page="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span class="t-full">Settings</span><span class="t-short">Settings</span></button>
+</nav>
+<main>
+<section id="dashboard" class="page active">
+<h1>Dashboard</h1><p class="lead">Your team's attendance at a glance.</p>
+<div class="inline no-print" style="margin-bottom:15px"><label for="dashDate">Date</label><input id="dashDate" type="date"></div>
+<div class="cards" id="dashCards"></div>
+<div class="panel"><div class="panel-head"><h2>Today's attendance</h2><button class="btn small no-print" onclick="go('attendance')">Mark attendance →</button></div><div class="table-wrap" id="dashTable"></div></div>
+<div class="panel"><div class="panel-head"><h2>Current month summary</h2><span id="monthLabel" class="k-label"></span></div><div class="table-wrap" id="dashMonthly"></div></div>
+</section>
+<section id="attendance" class="page">
+<h1>Daily attendance</h1><p class="lead">Select a date and record each employee's attendance and arrival time.</p>
+<div class="panel">
+<div class="panel-head"><div class="controls"><label>Date</label><input id="attDate" type="date"></div><div class="controls"><button class="btn" onclick="markAll('Present')">Mark all present</button><button class="btn primary" onclick="saveAttendance()">Save attendance</button></div></div>
+<div class="notice">Sundays are automatically marked as weekly holidays. Late status is calculated from the office start time in Settings.</div>
+<div class="table-wrap" id="attTable"></div>
+</div></section>
+<section id="employees" class="page">
+<h1>Employees</h1><p class="lead">Manage staff profiles and monthly basic salaries.</p>
+<div class="panel"><div class="panel-head"><h2>Employee directory</h2></div><div class="table-wrap" id="empTable"></div></div>
+<div class="panel"><h2 id="empFormTitle">Add employee</h2><form id="empForm" class="form-grid" style="margin-top:13px">
+<input type="hidden" id="empId"><div class="field"><label>Full name</label><input id="empName" required placeholder="Employee name"></div>
+<div class="field"><label>Monthly salary (Rs)</label><input id="empSalary" type="number" min="0" step="1" value="0" required></div>
+<div class="field" style="justify-content:end"><button class="btn primary" type="submit">Save employee</button></div></form></div>
+</section>
+<section id="leaves" class="page">
+<h1>Leave management</h1><p class="lead">Submit leave entries and track approval status.</p>
+<div class="panel"><h2>Record a leave</h2><form id="leaveForm" class="form-grid" style="margin-top:13px">
+<div class="field"><label>Employee</label><select id="leaveEmp" required></select></div>
+<div class="field"><label>From date</label><input id="leaveFrom" type="date" required></div>
+<div class="field"><label>To date</label><input id="leaveTo" type="date" required></div>
+<div class="field"><label>Leave type</label><select id="leaveType"><option>Paid</option><option>Unpaid</option><option>Sick</option><option>Casual</option></select></div>
+<div class="field"><label>Status</label><select id="leaveStatus"><option>Approved</option><option>Pending</option><option>Rejected</option></select></div>
+<div class="field"><label>Reason</label><input id="leaveReason" placeholder="Optional"></div>
+<div class="field"><button class="btn primary" type="submit">Add leave record</button></div></form></div>
+<div class="panel"><div class="panel-head"><h2>Leave records</h2></div><div class="table-wrap" id="leaveTable"></div></div>
+</section>
+<section id="reports" class="page">
+<h1>Reports & payroll</h1><p class="lead">Review monthly attendance, calculate salary and export reports.</p>
+<div class="panel"><div class="panel-head"><div class="controls"><label>Month</label><input type="month" id="reportMonth"></div><div class="actions no-print"><button class="btn" onclick="exportAttendance()">Export attendance CSV</button><button class="btn" onclick="exportPayroll()">Export payroll CSV</button><button class="btn primary" onclick="window.print()">Print / Save PDF</button></div></div>
+<div class="notice">Salary formula: (monthly salary ÷ working days in month) × payable days. Present days count as 1, half-days as 0.5, approved paid leave as 1. Sundays are excluded. Late arrivals are tracked separately and do not automatically reduce pay.</div>
+<div class="table-wrap" id="payrollTable"></div></div>
+<div class="panel"><div class="panel-head"><h2>Employee attendance history</h2><div class="controls"><select id="historyEmp"></select><input type="month" id="historyMonth"></div></div><div class="table-wrap" id="historyTable"></div></div>
+</section>
+<section id="settings" class="page">
+<h1>Settings</h1><p class="lead">Configure working hours, attendance rules, and secure cloud sync.</p>
+<div class="panel"><form id="settingsForm" class="form-grid">
+<div class="field"><label>Office start time</label><input id="startTime" type="time" required></div>
+<div class="field"><label>Late grace period (minutes)</label><input id="grace" type="number" min="0" max="180" required></div>
+<div class="field"><label>Weekly holiday</label><input value="Sunday (automatic)" disabled></div>
+<div class="field"><button class="btn primary" type="submit">Save settings</button></div>
+</form></div>
+<div class="panel"><h2>Cloud sync</h2><p class="lead" style="margin-top:7px">Sign in with the StaffTrack admin account to share records securely between this computer and your phone. The publishable key is safe for a web app; never enter a service-role key here.</p><form id="cloudForm" class="form-grid" style="margin-top:13px">
+<div class="field"><label>Supabase project URL</label><input id="cloudUrl" type="url" placeholder="https://your-project.supabase.co" required></div>
+<div class="field"><label>Publishable / anon key</label><input id="cloudKey" type="text" autocomplete="off" placeholder="Paste the publishable key" required></div>
+<div class="field"><label>Admin email</label><input id="cloudEmail" type="email" autocomplete="username" required></div>
+<div class="field"><label>Admin password</label><input id="cloudPassword" type="password" autocomplete="current-password" required></div>
+<div class="field" style="justify-content:end"><button class="btn primary" type="submit">Connect &amp; sync</button></div>
+</form><p class="lead" id="cloudMessage" style="margin:12px 0 0"></p></div>
+<div class="panel"><h2>Data backup</h2><p class="lead" style="margin-top:7px">Your records are stored in this browser on this device. Export CSV reports regularly as a backup.</p><div class="actions"><button class="btn" onclick="backupJSON()">Download full data backup</button><label class="btn">Restore backup<input type="file" accept="application/json" id="restoreFile" hidden></label><button class="btn danger" onclick="clearData()">Reset all records</button></div></div>
+<div class="panel"><h2>Account</h2><p class="lead" id="acctInfo" style="margin:7px 0 12px"></p><div class="actions"><button class="btn" onclick="changePw()">Change password</button><button class="btn" onclick="signOut()">Sign out</button></div></div>
+</section>
+</main></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+<script>
+const KEY='stafftrack_v1';
+const CLOUD_KEY='stafftrack_cloud_config_v1';
+const today=()=>{let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const monthNow=()=>today().slice(0,7);
+const uid=()=>Math.random().toString(36).slice(2,10);
+let db,cloudClient=null,cloudUser=null,cloudBusy=false;
+function initial(){return {employees:['Mobeen','Umair','Shoaib','Nouman'].map((name,i)=>({id:'e'+(i+1),name,salary:0,active:true})),attendance:{},leaves:[],settings:{start:'09:00',grace:10}}}
+function load(){try{db=JSON.parse(localStorage.getItem(KEY))||initial()}catch(e){db=initial()}if(!db.employees)db=initial();localStorage.setItem(KEY,JSON.stringify(db))}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));queueCloudSave()}
+function cloudConfig(){try{return JSON.parse(localStorage.getItem(CLOUD_KEY))||{}}catch(e){return {}}}
+function setCloudMessage(message){let el=document.getElementById('cloudMessage');if(el)el.textContent=message;let status=document.getElementById('syncStatus');if(status)status.innerHTML=cloudUser?'CLOUD SYNC ACTIVE<br>Records shared securely':'LOCAL OFFICE SYSTEM<br>Records saved on this device'}
+function queueCloudSave(){if(!cloudClient||!cloudUser||cloudBusy)return;clearTimeout(window.staffTrackCloudTimer);window.staffTrackCloudTimer=setTimeout(pushCloud,700)}
+async function pushCloud(){if(!cloudClient||!cloudUser||cloudBusy)return;cloudBusy=true;try{let {error}=await cloudClient.from('stafftrack_data').upsert({user_id:cloudUser.id,data:db,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error)throw error;setCloudMessage('Cloud sync complete.');}catch(e){setCloudMessage('Saved on this device. Cloud sync needs attention: '+e.message)}finally{cloudBusy=false}}
+async function connectCloud(){let url=cloudUrl.value.trim().replace(/\/$/,''),key=cloudKey.value.trim(),email=cloudEmail.value.trim(),password=cloudPassword.value;if(!url||!key||!email||!password)return;setCloudMessage('Connecting…');try{cloudClient=supabase.createClient(url,key);let {data,error}=await cloudClient.auth.signInWithPassword({email,password});if(error)throw error;cloudUser=data.user;localStorage.setItem(CLOUD_KEY,JSON.stringify({url,key,email}));cloudPassword.value='';let {data:row,error:readError}=await cloudClient.from('stafftrack_data').select('data').eq('user_id',cloudUser.id).maybeSingle();if(readError)throw readError;if(row?.data?.employees){db=row.data;localStorage.setItem(KEY,JSON.stringify(db));setCloudMessage('Cloud data loaded.');}else{await pushCloud();setCloudMessage('Your local data has been copied to the cloud.');}render();}catch(e){cloudClient=null;cloudUser=null;setCloudMessage('Could not connect: '+e.message)}}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function isSun(date){return new Date(date+'T12:00:00').getDay()===0}
+function datesInMonth(m){let [y,mo]=m.split('-').map(Number),n=new Date(y,mo,0).getDate();return Array.from({length:n},(_,i)=>`${m}-${String(i+1).padStart(2,'0')}`)}
+function workingDays(m){return datesInMonth(m).filter(d=>!isSun(d)).length}
+function activeEmployees(){return db.employees.filter(e=>e.active!==false)}
+function getRec(date,id){if(isSun(date))return {status:'Holiday',time:'',note:'Weekly holiday'};return db.attendance[date]?.[id]||{status:'',time:'',note:''}}
+function isLate(time){if(!time)return false;let [h,m]=time.split(':').map(Number),[sh,sm]=db.settings.start.split(':').map(Number);return h*60+m>sh*60+sm+Number(db.settings.grace)}
+function approvedPaidLeave(id,date){return db.leaves.some(l=>l.empId===id&&l.status==='Approved'&&l.type!=='Unpaid'&&date>=l.from&&date<=l.to)}
+function payableFor(emp,m){let count=0;for(let d of datesInMonth(m)){if(isSun(d))continue;let r=getRec(d,emp.id);if(r.status==='Present')count+=1;else if(r.status==='Half Day')count+=.5;else if(r.status==='Leave'&&approvedPaidLeave(emp.id,d))count+=1;else if(!r.status&&approvedPaidLeave(emp.id,d))count+=1;}return count}
+function fmt(n){return 'Rs '+Number(n||0).toLocaleString('en-PK',{maximumFractionDigits:0})}
+function statusPill(s){return `<span class="pill ${esc(s.replace(' ','\\ '))}">${esc(s||'Not marked')}</span>`}
+function go(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));render()}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+function render(){renderDashboard();renderAttendance();renderEmployees();renderLeaves();renderReports();renderSettings()}
+function renderDashboard(){
+ let d=document.getElementById('dashDate').value||today(),m=d.slice(0,7),emps=activeEmployees(),rows=emps.map(e=>({e,r:getRec(d,e.id)}));
+ let count=s=>rows.filter(x=>x.r.status===s).length,late=rows.filter(x=>x.r.status==='Present'&&isLate(x.r.time)).length;
+ document.getElementById('dashCards').innerHTML=[
+ ['Employees',emps.length,'Active staff'],['Present',count('Present'),'Marked present'],['Absent',count('Absent'),'Marked absent'],['Late arrivals',late,'Based on office start time']
+ ].map((x,i)=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${x[1]}</div><div class="k-note">${x[2]}</div></div>`).join('');
+ document.getElementById('dashTable').innerHTML=rows.length?`<table><thead><tr><th>Employee</th><th>Status</th><th>Arrival</th><th>Late?</th></tr></thead><tbody>${rows.map(({e,r})=>`<tr><td><b>${esc(e.name)}</b></td><td>${statusPill(r.status||'Not marked')}</td><td>${esc(r.time||'—')}</td><td>${r.status==='Present'&&isLate(r.time)?'<span class="pill Late">Late</span>':'—'}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No active employees.</div>';
+ document.getElementById('monthLabel').textContent=m;
+ document.getElementById('dashMonthly').innerHTML=monthlyTable(m);
+}
+function monthlyTable(m){return `<table><thead><tr><th>Employee</th><th>Present</th><th>Absent</th><th>Half days</th><th>Paid leave</th><th>Late</th></tr></thead><tbody>${activeEmployees().map(e=>{let recs=datesInMonth(m).filter(d=>!isSun(d)).map(d=>getRec(d,e.id));let c=s=>recs.filter(r=>r.status===s).length;let late=recs.filter(r=>r.status==='Present'&&isLate(r.time)).length;let paid=db.leaves.filter(l=>l.empId===e.id&&l.status==='Approved'&&l.type!=='Unpaid'&&l.to>=m+'-01'&&l.from<=m+'-31').length;return `<tr><td><b>${esc(e.name)}</b></td><td>${c('Present')}</td><td>${c('Absent')}</td><td>${c('Half Day')}</td><td>${paid}</td><td>${late}</td></tr>`}).join('')}</tbody></table>`}
+function renderAttendance(){
+ let date=document.getElementById('attDate').value||today();let emps=activeEmployees();
+ document.getElementById('attTable').innerHTML=`<table><thead><tr><th>Employee</th><th>Attendance status</th><th>Time in</th><th>Late flag</th><th>Note</th></tr></thead><tbody>${emps.map(e=>{let r=getRec(date,e.id);let status=isSun(date)?'Holiday':(r.status||'Present');return `<tr><td><b>${esc(e.name)}</b></td><td><select data-id="${e.id}" class="att-status" ${isSun(date)?'disabled':''}>${['Present','Absent','Leave','Half Day'].map(s=>`<option ${status===s?'selected':''}>${s}</option>`).join('')}</select></td><td><input type="time" class="att-time" data-id="${e.id}" value="${esc(r.time||'')}" ${isSun(date)||status!=='Present'?'disabled':''}></td><td>${status==='Present'&&isLate(r.time)?'<span class="pill Late">Late</span>':'—'}</td><td><input class="att-note" data-id="${e.id}" value="${esc(r.note||'')}" placeholder="Optional" ${isSun(date)?'disabled':''}></td></tr>`}).join('')}</tbody></table>${isSun(date)?'<div class="empty">Sunday is an automatic weekly holiday.</div>':''}`;
+ document.querySelectorAll('.att-status').forEach(x=>x.addEventListener('change',()=>{let t=document.querySelector(`.att-time[data-id="${x.dataset.id}"]`);t.disabled=x.value!=='Present';renderAttendanceLateCell(x.dataset.id)}));
+ document.querySelectorAll('.att-time').forEach(x=>x.addEventListener('change',()=>renderAttendanceLateCell(x.dataset.id)));
+}
+function renderAttendanceLateCell(id){let row=document.querySelector(`.att-time[data-id="${id}"]`)?.closest('tr');if(!row)return;let status=row.querySelector('.att-status').value,time=row.querySelector('.att-time').value;row.children[3].innerHTML=status==='Present'&&isLate(time)?'<span class="pill Late">Late</span>':'—'}
+function markAll(s){if(isSun(document.getElementById('attDate').value))return;document.querySelectorAll('.att-status').forEach(x=>{x.value=s;let t=document.querySelector(`.att-time[data-id="${x.dataset.id}"]`);t.disabled=s!=='Present'});renderAttendance()}
+function saveAttendance(){let d=document.getElementById('attDate').value;if(!d)return;if(isSun(d)){alert('Sunday is an automatic holiday.');return}db.attendance[d]=db.attendance[d]||{};document.querySelectorAll('.att-status').forEach(x=>{let id=x.dataset.id;db.attendance[d][id]={status:x.value,time:document.querySelector(`.att-time[data-id="${id}"]`).value,note:document.querySelector(`.att-note[data-id="${id}"]`).value}});save();render();alert('Attendance saved.')}
+function renderEmployees(){document.getElementById('empTable').innerHTML=`<table><thead><tr><th>Name</th><th>Monthly salary</th><th>State</th><th>Actions</th></tr></thead><tbody>${db.employees.map(e=>`<tr><td><b>${esc(e.name)}</b></td><td>${fmt(e.salary)}</td><td>${e.active===false?'Inactive':'Active'}</td><td class="actions"><button class="btn small" onclick="editEmp('${e.id}')">Edit</button><button class="btn small" onclick="toggleEmp('${e.id}')">${e.active===false?'Activate':'Deactivate'}</button></td></tr>`).join('')}</tbody></table>`;fillEmployeeSelects()}
+function fillEmployeeSelects(){let opts=activeEmployees().map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('');['leaveEmp','historyEmp'].forEach(id=>{let el=document.getElementById(id),old=el.value;el.innerHTML=opts;if([...el.options].some(o=>o.value===old))el.value=old})}
+function editEmp(id){let e=db.employees.find(x=>x.id===id);empId.value=e.id;empName.value=e.name;empSalary.value=e.salary;empFormTitle.textContent='Edit employee';}
+function toggleEmp(id){let e=db.employees.find(x=>x.id===id);e.active=e.active===false;save();render()}
+document.getElementById('empForm').addEventListener('submit',e=>{e.preventDefault();let id=empId.value,name=empName.value.trim(),salary=Number(empSalary.value);if(id){Object.assign(db.employees.find(x=>x.id===id),{name,salary})}else db.employees.push({id:uid(),name,salary,active:true});save();e.target.reset();empId.value='';empSalary.value=0;empFormTitle.textContent='Add employee';render()});
+document.getElementById('leaveForm').addEventListener('submit',e=>{e.preventDefault();let from=leaveFrom.value,to=leaveTo.value;if(to<from){alert('To date cannot be earlier than From date.');return}db.leaves.push({id:uid(),empId:leaveEmp.value,from,to,type:leaveType.value,status:leaveStatus.value,reason:leaveReason.value});save();e.target.reset();render()});
+function renderLeaves(){document.getElementById('leaveTable').innerHTML=db.leaves.length?`<table><thead><tr><th>Employee</th><th>Dates</th><th>Type</th><th>Status</th><th>Reason</th><th></th></tr></thead><tbody>${db.leaves.map(l=>`<tr><td>${esc(db.employees.find(e=>e.id===l.empId)?.name||'Removed employee')}</td><td>${l.from} → ${l.to}</td><td>${esc(l.type)}</td><td><select onchange="updateLeave('${l.id}',this.value)">${['Pending','Approved','Rejected'].map(s=>`<option ${l.status===s?'selected':''}>${s}</option>`).join('')}</select></td><td>${esc(l.reason)}</td><td><button class="btn small danger" onclick="deleteLeave('${l.id}')">Delete</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty">No leave records yet.</div>'}
+function updateLeave(id,s){db.leaves.find(l=>l.id===id).status=s;save();render()}
+function deleteLeave(id){if(confirm('Delete this leave record?')){db.leaves=db.leaves.filter(l=>l.id!==id);save();render()}}
+function renderReports(){let m=reportMonth.value||monthNow();let html=`<table><thead><tr><th>Employee</th><th>Basic salary</th><th>Working days</th><th>Payable days</th><th>Absent</th><th>Late</th><th>Estimated salary</th></tr></thead><tbody>${activeEmployees().map(e=>{let ds=datesInMonth(m).filter(d=>!isSun(d)),recs=ds.map(d=>getRec(d,e.id)),pay=payableFor(e,m),abs=recs.filter(r=>r.status==='Absent').length,late=recs.filter(r=>r.status==='Present'&&isLate(r.time)).length,amount=workingDays(m)?e.salary/workingDays(m)*pay:0;return `<tr><td><b>${esc(e.name)}</b></td><td>${fmt(e.salary)}</td><td>${workingDays(m)}</td><td>${pay}</td><td>${abs}</td><td>${late}</td><td><b>${fmt(amount)}</b></td></tr>`}).join('')}</tbody></table>`;document.getElementById('payrollTable').innerHTML=html;
+ let emp=historyEmp.value||activeEmployees()[0]?.id,hm=historyMonth.value||m;let hist=emp?datesInMonth(hm).map(d=>({d,r:getRec(d,emp)})).filter(x=>x.r.status||x.r.time):[];document.getElementById('historyTable').innerHTML=hist.length?`<table><thead><tr><th>Date</th><th>Day</th><th>Status</th><th>Time in</th><th>Late</th><th>Note</th></tr></thead><tbody>${hist.map(x=>`<tr><td>${x.d}</td><td>${new Date(x.d+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'})}</td><td>${statusPill(x.r.status)}</td><td>${esc(x.r.time||'—')}</td><td>${x.r.status==='Present'&&isLate(x.r.time)?'Yes':'—'}</td><td>${esc(x.r.note||'')}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No attendance history for this employee and month.</div>'}
+function renderSettings(){startTime.value=db.settings.start;grace.value=db.settings.grace}
+document.getElementById('settingsForm').addEventListener('submit',e=>{e.preventDefault();db.settings={start:startTime.value,grace:Number(grace.value)};save();render();alert('Settings saved.')});
+document.getElementById('cloudForm').addEventListener('submit',e=>{e.preventDefault();connectCloud()});
+function csv(name,rows){let content=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+content],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();URL.revokeObjectURL(a.href)}
+function exportAttendance(){let m=reportMonth.value||monthNow(),rows=[['Date','Employee','Status','Time in','Late','Note']];for(let d of datesInMonth(m))for(let e of activeEmployees()){let r=getRec(d,e.id);rows.push([d,e.name,r.status||'Not marked',r.time,isLate(r.time)&&r.status==='Present'?'Yes':'No',r.note])}csv('attendance-'+m+'.csv',rows)}
+function exportPayroll(){let m=reportMonth.value||monthNow(),rows=[['Month','Employee','Basic salary','Working days','Payable days','Absent days','Late arrivals','Estimated salary']];for(let e of activeEmployees()){let ds=datesInMonth(m).filter(d=>!isSun(d)),rs=ds.map(d=>getRec(d,e.id)),pay=payableFor(e,m);rows.push([m,e.name,e.salary,ds.length,pay,rs.filter(r=>r.status==='Absent').length,rs.filter(r=>r.status==='Present'&&isLate(r.time)).length,ds.length?e.salary/ds.length*pay:0])}csv('payroll-'+m+'.csv',rows)}
+function backupJSON(){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download='stafftrack-backup.json';a.click();URL.revokeObjectURL(a.href)}
+document.getElementById('restoreFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!x.employees||!x.attendance||!x.settings)throw Error();db=x;save();render();alert('Backup restored.')}catch(err){alert('That file is not a valid StaffTrack backup.')}e.target.value=''});
+function clearData(){if(confirm('This will permanently clear attendance, leave and employee records in this browser. Continue?')){db=initial();save();render()}}
+load();
+let savedCloud=cloudConfig();cloudUrl.value=savedCloud.url||'https://sxmnhqwchovnufmsnxaw.supabase.co';cloudKey.value=savedCloud.key||'';cloudEmail.value=savedCloud.email||'';setCloudMessage('Not connected. Add the project publishable key and sign in to enable cloud sync.');
+dashDate.value=today();attDate.value=today();reportMonth.value=monthNow();historyMonth.value=monthNow();
+dashDate.addEventListener('change',renderDashboard);attDate.addEventListener('change',renderAttendance);reportMonth.addEventListener('change',renderReports);historyMonth.addEventListener('change',renderReports);historyEmp.addEventListener('change',renderReports);
+render();
+</script><script>
+const SB_URL='https://sxmnhqwchovnufmsnxaw.supabase.co';
+const SB_KEY='sb_publishable_xto9GWgYVxD6g3jI8eSI5g_3A3InhTL';
+let sb=null,profile=null,pollT=null;
+const $=id=>document.getElementById(id);
+const gmsg=t=>{$('gMsg').textContent=t};
+const getKey=()=>SB_KEY||$('gKey').value.trim()||cloudConfig().key||'';
+function mkClient(){if(!window.supabase)throw Error('The sign-in library did not load. Check your internet connection and turn off any ad blocker.');if(!getKey())throw Error('Paste the project key first.');return supabase.createClient(SB_URL,getKey())}
+async function enter(user){
+ let {data:p,error}=await sb.from('staff_profiles').select('*').eq('user_id',user.id).maybeSingle();
+ if(error)throw error;
+ if(!p){await sb.auth.signOut();throw Error('This account has no StaffTrack access. Ask the admin.')}
+ profile=p;document.body.classList.remove('locked');
+ if(p.role==='admin')await startAdmin(user);else{document.body.classList.add('emp-mode');$('ehName').textContent='Hi, '+p.name;await loadMine();await loadLeaves()}
+}
+async function startAdmin(user){
+ cloudClient=sb;cloudUser=user;
+ let {data:row,error}=await sb.from('stafftrack_data').select('data').eq('user_id',user.id).maybeSingle();
+ if(error)throw error;
+ if(row?.data?.employees){db=row.data;localStorage.setItem(KEY,JSON.stringify(db))}else await pushCloud();
+ await pullMarks();await pullLeaves();setCloudMessage('Signed in as admin.');render();
+ $('acctInfo').textContent='Signed in as '+user.email+' (admin)';
+ clearInterval(pollT);pollT=setInterval(()=>{if(!document.hidden){pullMarks();pullLeaves()}},30000);
+}
+async function pullMarks(){
+ let {data,error}=await sb.from('attendance_marks').select('*').order('mark_date',{ascending:false}).limit(1000);
+ if(error||!data)return;let before=JSON.stringify(db.attendance);
+ data.forEach(r=>{(db.attendance[r.mark_date]=db.attendance[r.mark_date]||{})[r.emp_id]={status:r.status,time:r.time_in||'',note:r.note||''}});
+ if(JSON.stringify(db.attendance)!==before){localStorage.setItem(KEY,JSON.stringify(db));render()}
+}
+const _saveAtt=saveAttendance;
+saveAttendance=function(){_saveAtt();let d=$('attDate').value;if(!sb||!profile||profile.role!=='admin'||!d||isSun(d))return;
+ let rows=Object.entries(db.attendance[d]||{}).map(([emp_id,r])=>({emp_id,mark_date:d,status:r.status,time_in:r.time||'',note:r.note||'',updated_at:new Date().toISOString()}));
+ sb.from('attendance_marks').upsert(rows,{onConflict:'emp_id,mark_date'}).then(({error})=>{if(error)alert('Saved here, but the cloud update failed: '+error.message)})};
+async function loadMine(){
+ let {data,error}=await sb.from('attendance_marks').select('*').eq('emp_id',profile.employee_id).order('mark_date',{ascending:false}).limit(10);
+ if(error){$('ehMsg').textContent=error.message;return}
+ let t=today(),mine=(data||[]).find(r=>r.mark_date===t);
+ $('ehDate').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ $('ehStatus').textContent=mine?(mine.status==='Present'?'Checked in at '+mine.time_in:'Marked '+mine.status+' by admin'):(isSun(t)?'Sunday: weekly holiday':'Not checked in yet');
+ $('ehBtn').disabled=!!mine||isSun(t);$('ehBtn').textContent=mine?'Attendance marked':'Check in now';
+ $('ehList').innerHTML=(data||[]).length?data.map(r=>`<div class="eh-row"><span>${esc(r.mark_date)}</span><span>${statusPill(r.status)}</span><span>${esc(r.time_in||'—')}</span></div>`).join(''):'<div class="empty">No attendance marked yet.</div>';
+}
+$('ehBtn').addEventListener('click',async()=>{$('ehBtn').disabled=true;let {error}=await sb.rpc('check_in',{p_note:''});$('ehMsg').textContent=error?error.message:'';await loadMine()});
+$('gateForm').addEventListener('submit',async e=>{e.preventDefault();gmsg('Signing in…');$('gBtn').disabled=true;
+ try{sb=mkClient();let {data,error}=await sb.auth.signInWithPassword({email:$('gEmail').value.trim(),password:$('gPass').value});if(error)throw error;
+ localStorage.setItem(CLOUD_KEY,JSON.stringify({url:SB_URL,key:getKey(),email:data.user.email}));$('gPass').value='';gmsg('');await enter(data.user)}
+ catch(err){gmsg(err.message||String(err))}finally{$('gBtn').disabled=false}});
+
+async function pullLeaves(){
+ let {data,error}=await sb.from('leave_requests').select('*');if(error||!data)return;let before=JSON.stringify(db.leaves);
+ data.forEach(r=>{let l=db.leaves.find(x=>x.id===r.id);if(l)l.status=r.status;else db.leaves.push({id:r.id,empId:r.emp_id,from:r.from_date,to:r.to_date,type:r.type,status:r.status,reason:r.reason||''})});
+ let have=new Set(data.map(r=>r.id)),miss=db.leaves.filter(l=>!have.has(l.id)).map(l=>({id:l.id,emp_id:l.empId,from_date:l.from,to_date:l.to,type:l.type,status:l.status,reason:l.reason||''}));
+ if(miss.length)await sb.from('leave_requests').upsert(miss);
+ if(JSON.stringify(db.leaves)!==before){save();render()}
+}
+const _updLeave=updateLeave;updateLeave=function(id,s){_updLeave(id,s);if(sb&&profile?.role==='admin')sb.from('leave_requests').update({status:s}).eq('id',id).then(()=>{})};
+const _delLeave=deleteLeave;deleteLeave=function(id){let had=db.leaves.some(l=>l.id===id);_delLeave(id);if(had&&!db.leaves.some(l=>l.id===id)&&sb&&profile?.role==='admin')sb.from('leave_requests').delete().eq('id',id).then(()=>{})};
+async function loadLeaves(){
+ let {data,error}=await sb.from('leave_requests').select('*').eq('emp_id',profile.employee_id).order('created_at',{ascending:false}).limit(20);
+ $('lvList').innerHTML=error?esc(error.message):(data||[]).length?data.map(r=>`<div class="eh-row"><span>${esc(r.from_date)} → ${esc(r.to_date)}<br><small>${esc(r.type)}${r.reason?' · '+esc(r.reason):''}</small></span><span>${statusPill(r.status)}</span></div>`).join(''):'<div class="empty">No leave requests yet.</div>';
+}
+$('lvForm').addEventListener('submit',async e=>{e.preventDefault();let f=$('lvFrom').value,t=$('lvTo').value;if(t<f){$('lvMsg').textContent='To date cannot be earlier than From date.';return}
+ $('lvBtn').disabled=true;let {error}=await sb.rpc('apply_leave',{p_from:f,p_to:t,p_type:$('lvType').value,p_reason:$('lvReason').value.trim()});
+ $('lvMsg').textContent=error?error.message:'Leave request sent. The admin will review it.';if(!error)e.target.reset();$('lvBtn').disabled=false;await loadLeaves()});
+async function signOut(){clearInterval(pollT);try{await sb.auth.signOut()}catch(e){}location.reload()}
+async function changePw(){let p=prompt('New password (at least 8 characters):');if(!p)return;if(p.length<8){alert('Use at least 8 characters.');return}let {error}=await sb.auth.updateUser({password:p});alert(error?error.message:'Password updated.')}
+$('gEmail').value=cloudConfig().email||'';
+(async()=>{if(!SB_KEY&&!cloudConfig().key){$('gKeyRow').hidden=false;return}
+ try{sb=mkClient();let {data}=await sb.auth.getSession();if(data.session)await enter(data.session.user)}catch(e){gmsg(e.message)}})();
+</script></body></html>
